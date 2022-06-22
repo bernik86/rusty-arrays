@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2022 bernik86.
  *
- * This file is part of rusty-arrays 
+ * This file is part of rusty-arrays
  * (see https://github.com/bernik86/rusty-arrays).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use arrays::array2d;
-use arrays::array2d::Array2d;
+use rusty_arrays::array2d::Array2d;
 
 #[test]
 fn create_identity_float()
