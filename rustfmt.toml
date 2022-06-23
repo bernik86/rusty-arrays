@@ -1,0 +1,6 @@
+brace_style = "AlwaysNextLine"
+edition = "2021"
+max_width = 86
+reorder_modules = false
+struct_field_align_threshold = 20
+wrap_comments = true

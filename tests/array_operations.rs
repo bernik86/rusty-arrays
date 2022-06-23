@@ -18,32 +18,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use core::fmt::Debug;
-use std::clone::Clone;
-use std::fs;
-use std::path::PathBuf;
+use rusty_arrays::array2d::Array2d;
 
-use crate::array2d::Array2d;
-
-pub fn savetxt<T>(filename: PathBuf, arr: &Array2d<T>) -> std::io::Result<()>
-where
-    T: Clone + Debug + std::marker::Copy,
+#[test]
+fn transpose()
 {
-    let data = format!("{}", arr);
-    fs::write(filename, data)?;
-    Ok(())
-}
-
-/// Load matrix from file and store elements as f64
-pub fn loadtxt(filename: PathBuf) -> std::io::Result<Array2d<f64>>
-{
-    let string = fs::read_to_string(filename).unwrap();
-    Ok(Array2d::<f64>::from_string(string))
-}
-
-/// Load matrix from file and store elements as usize
-pub fn loadtxt_isize(filename: PathBuf) -> std::io::Result<Array2d<isize>>
-{
-    let string = fs::read_to_string(filename).unwrap();
-    Ok(Array2d::<isize>::from_string(string))
+    let v1 = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    let v2 = vec![1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16];
+    let arr1 = Array2d::<usize>::new(v1, 4, 4);
+    let mut arr2 = Array2d::<usize>::new(v2, 4, 4);
+    assert_eq!(arr1, arr2.transpose());
+    arr2.transpose_inplace();
+    assert_eq!(arr1, arr2);
 }

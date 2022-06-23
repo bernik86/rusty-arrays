@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2022 bernik86.
  *
- * This file is part of rusty-arrays 
+ * This file is part of rusty-arrays
  * (see https://github.com/bernik86/rusty-arrays).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -85,13 +85,25 @@ impl<'a, T: Debug + Clone + Copy> Array2d<T>
 
     pub fn transpose(&self) -> Array2d<T>
     {
-        let mut temp = Self::new_empty(self.cols, self.rows);
-        for i in 0..self.cols {
-            for j in 0..self.rows {
-                temp.data.push(self[(j, i)]);
-            }
-        }
+        let mut temp = Self::new_from_array(self);
+        temp.transpose_inplace();
         temp
+    }
+
+    pub fn transpose_inplace(&mut self)
+    {
+        let mut row: usize = 0;
+        for i_el in 0..(self.data.len() - 1) {
+            if i_el >= self.cols * (row + 1) {
+                row += 1;
+            }
+            if i_el < row * (self.cols + 1) {
+                continue;
+            }
+            let col = i_el - self.cols * row;
+            let j_el = self.cols * col + row;
+            self.data.swap(i_el, j_el);
+        }
     }
 
     pub fn row(&self, row: usize) -> Vec<T>

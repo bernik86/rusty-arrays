@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2022 bernik86.
  *
- * This file is part of rusty-arrays 
+ * This file is part of rusty-arrays
  * (see https://github.com/bernik86/rusty-arrays).
  *
  * This program is free software: you can redistribute it and/or modify
