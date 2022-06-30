@@ -20,26 +20,56 @@
 
 use crate::array2d;
 use crate::array2d::Array2d;
+use crate::vector_functions;
 use num;
+use std::fmt::Debug;
 
-pub fn norm<T>(arr: &Array2d<T>, axis: i8) -> f64
+pub fn norm<T>(arr: &Array2d<T>, axis: i8) -> Array2d<f64>
 where
     T: num::ToPrimitive,
     T: num::Num,
     T: std::ops::Mul<Output = T>,
     T: Copy,
     T: Clone,
+    T: Debug,
 {
     match axis {
         -1 => {
-            let arr_norm: f64 = (**arr)
-                .iter()
-                .map(|el| (*el) * (*el))
-                .fold(0.0_f64, |n, el| n + el.to_f64().unwrap());
-            arr_norm.sqrt()
+            let arr_norm = vec_norm(&(**arr));
+            Array2d::<f64>::new_fill(arr_norm, 1, 1)
+        }
+        0 => {
+            // Norms along rows
+            let (rows, _) = arr.shape();
+            let arr_norm: Vec<f64> =
+                arr.iter().map(|row| vec_norm(&row)).collect::<Vec<f64>>();
+
+            Array2d::<f64>::new(arr_norm, rows, 1)
+        }
+        1 => {
+            // Norms along columns
+            let trans = arr.transpose();
+            let arr_norm = norm(&trans, 0);
+            arr_norm.transpose()
         }
         _ => panic!("Norm not implemented for axis {}!", axis),
     }
+}
+
+fn vec_norm<T>(vec: &Vec<T>) -> f64
+where
+    T: num::ToPrimitive,
+    T: num::Num,
+    T: std::ops::Mul<Output = T>,
+    T: Copy,
+    T: Clone,
+    T: Debug,
+{
+    let norm: f64 = vec
+        .iter()
+        .map(|el| (*el) * (*el))
+        .fold(0.0_f64, |n, el| n + el.to_f64().unwrap());
+    norm.sqrt()
 }
 
 #[allow(non_snake_case)]
@@ -155,4 +185,41 @@ pub fn det(arr: &Array2d<f64>) -> f64
     let det_U: f64 = u.diag_iter().product();
 
     det_P * det_L * det_U
+}
+
+#[allow(non_snake_case)]
+pub fn gram_schmidt(arr: &Array2d<f64>) -> Option<(Array2d<f64>, Array2d<f64>)>
+{
+    let A = arr.transpose();
+    let (rows, cols) = A.shape();
+    let mut U = Array2d::<f64>::zeros(rows, cols);
+    let mut Q = Array2d::<f64>::zeros(rows, cols);
+
+    for i in 0..rows {
+        let A_row = A.row(i);
+        let mut U_row = A.row(i);
+        for j in 0..i {
+            //U_row -= proj(&U.row(j), &A_row);
+            let proj = proj(&U.row(j), &A_row);
+            vector_functions::sub_vec_inplace(&mut U_row, &proj);
+        }
+        U.set_row(i, U_row);
+        let mut Q_row = U.row(i);
+        let Q_norm = vec_norm(&Q_row);
+        vector_functions::scalar_div_inplace(&mut Q_row, Q_norm);
+        Q.set_row(i, Q_row);
+    }
+
+    U.transpose_inplace();
+    let R = Q.mat_mul_iter(&arr);
+    Q.transpose_inplace();
+    Some((Q, R))
+}
+
+fn proj(vec_u: &Vec<f64>, vec_a: &Vec<f64>) -> Vec<f64>
+{
+    let u_a: f64 = array2d::numerics::dot(vec_u, vec_a);
+    let u_u: f64 = array2d::numerics::dot(vec_u, vec_u);
+    let fact = u_a / u_u;
+    vec_u.iter().map(|el| (*el) * fact).collect::<Vec<f64>>()
 }

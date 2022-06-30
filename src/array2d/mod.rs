@@ -113,6 +113,15 @@ impl<'a, T: Debug + Clone + Copy> Array2d<T>
         self.data[start..end].to_vec()
     }
 
+    pub fn set_row(&mut self, row: usize, data: Vec<T>)
+    {
+        let start = row * self.cols;
+        let end = (row + 1) * self.cols;
+        for (i, j) in (start..end).enumerate() {
+            self.data[j] = data[i];
+        }
+    }
+
     pub fn col(&self, col: usize) -> Vec<T>
     {
         let mut col_data = Vec::<T>::with_capacity(self.rows);

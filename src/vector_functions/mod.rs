@@ -18,7 +18,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-pub mod array2d;
-pub mod io;
-pub mod linalg;
-pub mod vector_functions;
+pub fn add_vec_inplace<T: Clone + Copy + std::ops::AddAssign>(v1: &mut [T], v2: &[T])
+{
+    v1.iter_mut().zip(v2.iter()).for_each(|(e1, e2)| *e1 += *e2);
+}
+
+pub fn sub_vec_inplace<T: Clone + Copy + std::ops::SubAssign>(v1: &mut [T], v2: &[T])
+{
+    v1.iter_mut().zip(v2.iter()).for_each(|(e1, e2)| *e1 -= *e2);
+}
+
+pub fn scalar_div_inplace(vec: &mut [f64], div: f64)
+{
+    vec.iter_mut().for_each(|el| *el /= div);
+}
