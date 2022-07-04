@@ -27,6 +27,7 @@ use super::Array2d;
 
 impl<
         T: num::FromPrimitive
+            + num::ToPrimitive
             + num::Num
             + Debug
             + Clone
@@ -108,6 +109,19 @@ impl<
         }
         det
     }
+
+    pub fn is_upper_triangular(&self, eps: f64) -> bool
+    {
+        for i in 0..self.rows {
+            let row = self.row(i);
+            for el in row.iter().take(i) {
+                if el.to_f64().unwrap().abs() > eps {
+                    return false;
+                }
+            }
+        }
+        true
+    }
 }
 
 pub fn dot<T: num::Num + Debug + Clone + Copy + std::ops::AddAssign>(
@@ -187,6 +201,14 @@ pub fn argmax<'a, T: 'a + PartialOrd + Clone + Copy + Debug>(
         .iter()
         .enumerate()
         .max_by(|&(_, lhs), &(_, rhs)| lhs.partial_cmp(rhs).unwrap())
+}
+
+pub fn argmax_abs(arr: &Array2d<f64>) -> Option<(usize, &f64)>
+{
+    (**arr)
+        .iter()
+        .enumerate()
+        .max_by(|&(_, lhs), &(_, rhs)| lhs.abs().partial_cmp(&rhs.abs()).unwrap())
 }
 
 pub fn add_non_diag_inplace<T: Copy + Clone + std::ops::AddAssign>(

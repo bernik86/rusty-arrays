@@ -92,17 +92,27 @@ impl<'a, T: Debug + Clone + Copy> Array2d<T>
 
     pub fn transpose_inplace(&mut self)
     {
-        let mut row: usize = 0;
-        for i_el in 0..(self.data.len() - 1) {
-            if i_el >= self.cols * (row + 1) {
-                row += 1;
+        if self.rows == self.cols {
+            let mut row: usize = 0;
+            for i_el in 0..(self.data.len() - 1) {
+                if i_el >= self.cols * (row + 1) {
+                    row += 1;
+                }
+                if i_el < row * (self.cols + 1) {
+                    continue;
+                }
+                let col = i_el - self.cols * row;
+                let j_el = self.cols * col + row;
+                self.data.swap(i_el, j_el);
             }
-            if i_el < row * (self.cols + 1) {
-                continue;
+        } else {
+            let temp = Array2d::new_from_array(self);
+            std::mem::swap(&mut self.rows, &mut self.cols);
+            for i in 0..temp.rows {
+                for j in 0..temp.cols {
+                    self[(j, i)] = temp[(i, j)];
+                }
             }
-            let col = i_el - self.cols * row;
-            let j_el = self.cols * col + row;
-            self.data.swap(i_el, j_el);
         }
     }
 
@@ -149,6 +159,13 @@ impl<'a, T: Debug + Clone + Copy> Array2d<T>
     pub fn get_data(&self) -> &Vec<T>
     {
         &self.data
+    }
+
+    pub fn convert_idx(&self, idx: usize) -> (usize, usize)
+    {
+        let col = idx % self.cols;
+        let row = (idx - col) / self.cols;
+        (row, col)
     }
 
     /// Return array of shape (self.rows-1, self.cols-1) conatining

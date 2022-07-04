@@ -47,7 +47,7 @@ fn norm()
         20.09975124224178,
         21.908902300206645,
     ];
-    let res = Array2d::<f64>::new(v_res, 4, 1);
+    let res = Array2d::<f64>::new(v_res, 1, 4);
     assert_eq!(linalg::norm(&arr1, 1), res);
 }
 
@@ -89,4 +89,53 @@ fn qr()
 
     assert_eq!(Q, Q_res);
     assert_eq!(R, R_res);
+}
+
+#[allow(non_snake_case)]
+#[test]
+fn eig()
+{
+    let vec = vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0];
+    let arr = Array2d::<f64>::new(vec, 3, 3);
+    let res = linalg::eig(&arr).unwrap();
+
+    let vec = vec![
+        156.13668406196877_f64,
+        16.05999093950041,
+        -34.196675001469174,
+    ];
+    let res = (*res)
+        .iter()
+        .zip(vec.iter())
+        .filter(|(e1, e2)| (*e1 - *e2).abs() < 1E-11)
+        .collect::<Vec<(&f64, &f64)>>();
+    assert_eq!(res.len(), 3);
+}
+
+#[test]
+fn gauss_jordan()
+{
+    let vec = vec![1.0, 1.0, 1.0, 4.0, 2.0, 1.0, 9.0, 3.0, 1.0];
+    let arr = Array2d::<f64>::new(vec, 3, 3);
+    let vec = vec![0.0, 1.0, 3.0];
+    let rhs = Array2d::<f64>::new(vec, 3, 1);
+    let res = linalg::gauss_jordan(&arr, &rhs).unwrap();
+
+    let vec = vec![0.5, -0.5, 0.0];
+    let arr = Array2d::<f64>::new(vec, 3, 1);
+
+    assert_eq!(res, arr);
+}
+
+#[test]
+fn solve()
+{
+    let vec = vec![2.0, 1.0, -1.0, -3.0, -1.0, 2.0, -2.0, 1.0, 2.0];
+    let arr = Array2d::<f64>::new(vec, 3, 3); //.transpose();
+    let vec = vec![8.0, -11.0, -3.0];
+    let rhs = Array2d::<f64>::new(vec, 3, 1);
+
+    let res = linalg::solve(&arr, &rhs);
+    let vec = vec![2.0, 3.0, -1.0];
+    assert_eq!(res, Some(Array2d::<f64>::new(vec, 3, 1)));
 }

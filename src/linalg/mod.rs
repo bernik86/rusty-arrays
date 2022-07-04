@@ -56,7 +56,7 @@ where
     }
 }
 
-fn vec_norm<T>(vec: &Vec<T>) -> f64
+fn vec_norm<T>(vec: &[T]) -> f64
 where
     T: num::ToPrimitive,
     T: num::Num,
@@ -130,7 +130,7 @@ pub fn gauss_jordan(coeff: &Array2d<f64>, rhs: &Array2d<f64>)
     let mut R = Array2d::new_from_array(rhs);
 
     for i in 0..n_rows {
-        if C[(i, i)] == 0.0 {
+        if C[(i, i)].abs() <= 1.0E-14 {
             let col = C.col(i);
             let mut k_iter =
                 (0..n_rows).into_iter().filter(|k| col[*k].abs() > 0.0001);
@@ -143,11 +143,9 @@ pub fn gauss_jordan(coeff: &Array2d<f64>, rhs: &Array2d<f64>)
                 None => return None,
             }
         }
-
         for j in 0..n_rows {
             if i != j {
                 let ratio: f64 = C[(j, i)] / C[(i, i)];
-
                 for k in 0..n_rows {
                     C[(j, k)] -= ratio * C[(i, k)];
                 }
@@ -199,7 +197,6 @@ pub fn gram_schmidt(arr: &Array2d<f64>) -> Option<(Array2d<f64>, Array2d<f64>)>
         let A_row = A.row(i);
         let mut U_row = A.row(i);
         for j in 0..i {
-            //U_row -= proj(&U.row(j), &A_row);
             let proj = proj(&U.row(j), &A_row);
             vector_functions::sub_vec_inplace(&mut U_row, &proj);
         }
@@ -211,7 +208,7 @@ pub fn gram_schmidt(arr: &Array2d<f64>) -> Option<(Array2d<f64>, Array2d<f64>)>
     }
 
     U.transpose_inplace();
-    let R = Q.mat_mul_iter(&arr);
+    let R = Q.mat_mul_iter(arr);
     Q.transpose_inplace();
     Some((Q, R))
 }
@@ -222,4 +219,61 @@ fn proj(vec_u: &Vec<f64>, vec_a: &Vec<f64>) -> Vec<f64>
     let u_u: f64 = array2d::numerics::dot(vec_u, vec_u);
     let fact = u_a / u_u;
     vec_u.iter().map(|el| (*el) * fact).collect::<Vec<f64>>()
+}
+
+#[allow(non_snake_case)]
+pub fn eig(arr: &Array2d<f64>) -> Option<Array2d<f64>>
+{
+    let mut A_k = Array2d::new_from_array(arr);
+
+    while !A_k.is_upper_triangular(1.0E-14) {
+        let (Q, R) = gram_schmidt(&A_k).unwrap();
+        A_k = R.mat_mul_iter(&Q);
+    }
+    let mut vec = A_k.diag_iter().collect::<Vec<f64>>();
+
+    vec.sort_by(|d1, d2| d2.partial_cmp(d1).unwrap());
+    let n_ev = vec.len();
+
+    Some(Array2d::new(vec, n_ev, 1))
+}
+
+#[allow(non_snake_case)]
+pub fn solve(coeff: &Array2d<f64>, rhs: &Array2d<f64>) -> Option<Array2d<f64>>
+{
+    let (rows, _) = coeff.shape();
+
+    // Gauss elimination
+    let mut U = Array2d::new_from_array(coeff);
+
+    for k in 0..(rows - 1) {
+        for i in (k + 1)..rows {
+            U[(i, k)] /= U[(k, k)];
+            for j in (k + 1)..rows {
+                U[(i, j)] -= U[(i, k)] * U[(k, j)];
+            }
+        }
+    }
+
+    // Forward elimination
+    let mut b = Array2d::new_from_array(rhs);
+    println!("b");
+    b.print();
+    for k in 0..(rows - 1) {
+        for i in (k + 1)..rows {
+            b[(i, 0)] -= U[(i, k)] * b[(k, 0)]
+        }
+    }
+
+    // Backward solve
+    let mut x = vec![0.0; rows];
+    for i in (0..rows).rev() {
+        let mut s = b[(i, 0)];
+        for j in (i + 1)..rows {
+            s -= U[(i, j)] * x[j]
+        }
+        x[i] = s / U[(i, i)];
+    }
+
+    Some(Array2d::new(x, rows, 1))
 }

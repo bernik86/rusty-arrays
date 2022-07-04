@@ -31,6 +31,13 @@ fn transpose()
     assert_eq!(arr1, arr2.transpose());
     arr2.transpose_inplace();
     assert_eq!(arr1, arr2);
+
+    let v1 = vec![0, 1, 2, 3, 4, 5, 6, 7];
+    let v2 = vec![0, 4, 1, 5, 2, 6, 3, 7];
+    let mut arr1 = Array2d::<usize>::new(v1, 2, 4);
+    let arr2 = Array2d::<usize>::new(v2, 4, 2);
+    arr1.transpose_inplace();
+    assert_eq!(arr1, arr2);
 }
 
 #[test]
@@ -83,4 +90,26 @@ fn set_row()
     let v2 = vec![0, 0, 0, 0];
     arr1.set_row(2, v2);
     assert_eq!(arr1.row(2), vec![0, 0, 0, 0]);
+}
+
+#[test]
+fn is_upper_triangular()
+{
+    let vec = vec![
+        13.999999999999998,
+        20.999999999999996,
+        -14.000000000000002,
+        -6.661338147750939e-16,
+        175.0,
+        -70.0,
+        0.0,
+        1.4210854715202004e-14,
+        34.99999999999999,
+    ];
+    let arr = Array2d::<f64>::new(vec, 3, 3);
+    assert!(arr.is_upper_triangular(1.0E-13));
+
+    let vec = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    let arr = Array2d::<usize>::new(vec, 4, 4);
+    assert!(!arr.is_upper_triangular(1.0E-13));
 }
